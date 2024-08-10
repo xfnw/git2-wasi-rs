@@ -87,6 +87,11 @@ pub fn bytes2path(b: &[u8]) -> &Path {
     use std::os::unix::prelude::*;
     Path::new(OsStr::from_bytes(b))
 }
+#[cfg(target_os = "wasi")]
+pub fn bytes2path(b: &[u8]) -> &Path {
+    use std::os::wasi::ffi::OsStrExt;
+    Path::new(OsStr::from_bytes(b))
+}
 #[cfg(windows)]
 pub fn bytes2path(b: &[u8]) -> &Path {
     use std::str;
@@ -150,6 +155,12 @@ impl IntoCString for OsString {
     #[cfg(unix)]
     fn into_c_string(self) -> Result<CString, Error> {
         use std::os::unix::prelude::*;
+        let s: &OsStr = self.as_ref();
+        Ok(CString::new(s.as_bytes())?)
+    }
+    #[cfg(target_os = "wasi")]
+    fn into_c_string(self) -> Result<CString, Error> {
+        use std::os::wasi::ffi::OsStrExt;
         let s: &OsStr = self.as_ref();
         Ok(CString::new(s.as_bytes())?)
     }
